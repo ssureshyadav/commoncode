@@ -1,0 +1,31 @@
+String fieldName='CustomerEventMassRecCretionController';
+List<String> findValue=new List<String>(); 
+List<ApexClass> lstClass=[SELECT Id,Body,Name FROM ApexClass];
+System.debug(lstClass.size());
+for(ApexClass apexclass:lstClass){
+	if(apexclass.Body.contains(fieldName)){
+		findValue.add('Class Name:'+apexclass.Name);
+	}
+}
+List<ApexPage> lstPage=[SELECT Id,Markup,Name FROM ApexPage];
+System.debug(lstPage.size());
+for(ApexPage apexpage:lstPage){
+	if(apexpage.Markup.contains(fieldName)){
+		findValue.add('Vf Name:'+apexpage.Name);
+	}
+}
+List<ApexTrigger> lstTrigger=[SELECT Id,Body,Name FROM ApexTrigger];
+for(ApexTrigger apexTrigger:lstTrigger){
+	if(apexTrigger.Body.contains(fieldName)){
+		findValue.add('Trigger Name:'+apexTrigger.Name);
+	}
+}
+
+System.debug(findValue.size());
+if(findValue.size() >0){
+	for(String resultValue:findValue){
+		System.debug(resultValue+'\n');
+	}
+}
+
+
