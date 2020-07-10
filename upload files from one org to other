@@ -1,0 +1,36 @@
+global class BatchUploadcontentVersion implements Database.Batchable<sObject>, Database.AllowsCallouts{
+
+	global Database.QueryLocator start(Database.BatchableContext BC){
+		return Database.getQueryLocator('Select Id,Name from Test_Content_Version__c');
+	}
+
+	global void execute(Database.BatchableContext BC, List<sObject> scope){
+		try{
+			for(sobject s : scope){
+				Http h = new Http();
+				HttpRequest req = new HttpRequest();
+				req.setHeader('Content-Type','application/json');
+				req.setHeader('accept','application/json');
+				req.setHeader('Authorization','Bearer ' +'00Df0000003f6gr!AQ4AQDF5qWpTx79zf.WLi1Ej9FP6BZ26PqcrgimjMoqdZnA4q31YY_Q5OMcL0ZEVTWROqwcA.xt1Lf0UgcKvyr6.kPtb9YYp');
+				req.setEndpoint('https://amdpatents--developer1.my.salesforce.com/services/data/v48.0/sobjects/ContentVersion/068f0000000ODj5AAG/VersionData');
+				req.setMethod('GET');
+				HttpResponse res = h.send(req);
+
+				ContentVersion conVer = new ContentVersion();
+				conVer.ContentLocation = 'S'; // S specify this document is in SF, use E for external files
+				conVer.PathOnClient = 'Test.pdf';
+				conVer.Title = 'Test.pdf'; // Display name of the files
+				conVer.VersionData = res.getBodyAsBlob(); // converting your binary string to Blog
+				insert conVer;
+				System.debug(conVer.Id);
+			}
+			delete scope;
+		}catch(Exception e){
+			System.debug(e.getMessage());
+		}
+	}
+
+	global void finish(Database.BatchableContext BC){
+
+	}
+}
