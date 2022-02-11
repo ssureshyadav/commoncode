@@ -1,0 +1,5 @@
+PageReference pgReturnPage = new PageReference('/lightning/cmp/c__cmpApproveDecision');
+            pgReturnPage.setRedirect(true);
+         pgReturnPage.getParameters().put('c__val1',val);
+         pgReturnPage.getParameters().put('c__Docsid',url);
+           return pgReturnPage;
