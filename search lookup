@@ -1,0 +1,203 @@
+<div Style="width:63%;">
+    <div onkeyup="{!c.searchInventorsController }" onclick="{!c.searchInventorsController}" >
+        <lightning:input
+                         aura:id="txtSearchInventors"	
+                         name="txtSearchInventors"
+                         label="Search Inventors"
+                         placeholder = "Search Reviewers"
+                         type="search"
+                         variant="label-hidden"
+                         autocomplete="off" />
+    </div>
+    <aura:if isTrue="{!v.isShowSearchResult}">
+        <ui:scrollerWrapper class="scrollerSize">
+            <ui:inputSelect multiple="true" 
+                            class="multiple" 
+                            aura:id="lstAvailableInventors" 
+                            change="{!c.getSelectedInventorsController}" >
+            </ui:inputSelect>
+        </ui:scrollerWrapper>
+    </aura:if>
+    <p><lightning:pillContainer items="{!v.lstSelectedInventors}" 
+                                onitemremove="{!c.removeSelectedInventorsController}">
+        </lightning:pillContainer></p>
+</div>
+
+searchInventorsController: function (component, evt, helper) {
+        var isEscKey = evt.keyCode === 27;
+        if (isEscKey) {
+            component.set('v.isShowSearchResult',false);
+        } else {
+            var txtSearchInventors = component.find('txtSearchInventors').get('v.value');
+            if(txtSearchInventors.length > 2){
+             	var arrSelectedInventorIdsValue = component.get("v.arrSelectedInventorIds");
+            	helper.searchKeywordHelper(component, txtSearchInventors, component.get("v.recordId"));   
+            }else{
+                component.set('v.isShowSearchResult',false);
+            }
+        }
+        
+    },
+    
+    
+    removeSelectedInventorsController: function (component, event, helper) {
+        var selectedInventorId = event.getParam("item").name;
+        var InventorID=selectedInventorId;
+        
+        var items = component.get('v.lstSelectedInventors');
+		var item = event.getParam("index");
+        items.splice(item, 1);
+        component.set('v.lstSelectedInventors', items); 
+
+        var arrSelectedInventorIdsValue = component.get("v.arrSelectedInventorIds");
+		var index = arrSelectedInventorIdsValue.indexOf(selectedInventorId);
+        if (index > -1) {
+  			arrSelectedInventorIdsValue.splice(index, 1);
+		}
+      
+        component.set("v.arrSelectedInventorIds", arrSelectedInventorIdsValue);
+        component.set("v.strSelectedInventorIds", arrSelectedInventorIdsValue.join(","));
+       
+        if(component.get("v.recordId") != null && component.get("v.recordId") != undefined) {
+        	helper.RemovedKeyWord(component, InventorID, component.get("v.recordId"));
+        }
+        
+    },
+    
+    getSelectedInventorsController: function(component, event, helper) {
+		var selectedInventorId = component.find("lstAvailableInventors").get("v.value");
+        console.log(selectedInventorId);
+        var arrSelectedInventorIdsValue = component.get("v.arrSelectedInventorIds");
+        
+        if(component.get("v.recordId") != null && component.get("v.recordId") != undefined) {
+             helper.CreateInventor(component, selectedInventorId, component.get("v.recordId"));
+        }
+        
+        arrSelectedInventorIdsValue.push(selectedInventorId);
+        component.set("v.arrSelectedInventorIds", arrSelectedInventorIdsValue);
+        component.set("v.strSelectedInventorIds", arrSelectedInventorIdsValue.join(","));
+        component.set('v.isShowSearchResult',false);
+        helper.getSelectedInventorsHelper(component, component.get("v.arrSelectedInventorIds"));
+        component.find('txtSearchInventors').set('v.value','');
+        component.find('txtSearchInventors').focus();
+        
+	},
+  
+  Helper::
+  
+  searchKeywordHelper : function(component, txtSearchWord, recordId) {
+        var  RecordId='';
+        if (recordId != null && recordId != undefined) {
+            RecordId = recordId;
+        } else {
+            RecordId = '';  
+        }
+        
+        console.log("component.get('v.standardLead')", component.get('v.standardLead'));
+        var action = component.get('c.searchInventors');
+        action.setParams({ TagType : component.get("v.TagType"), searchWord : txtSearchWord, recordId : RecordId, standardLead:component.get('v.standardLead') });
+        action.setCallback
+        (
+            this,
+            $A.getCallback
+            (
+                function (response) {
+                    var state = response.getState();
+                    var result = response.getReturnValue();
+                    if (state === "SUCCESS")  {
+                        component.set('v.isShowSearchResult',true);
+                        component.find("lstAvailableInventors").set("v.options", result);
+                        console.log('resultresult', JSON.stringify(result));
+                    } else if (state === "ERROR")  {
+                        var errors = response.getError();
+                        console.error(errors);
+                    }
+                }
+            )
+        );
+        $A.enqueueAction(action);
+    },
+    
+    getSelectedInventorsHelper : function(component, arrSelectedInventorIds) {
+        var action = component.get('c.getInventors');
+        action.setParams({ recordId : component.get("v.recordId") });
+        action.setCallback
+        (
+            this,
+            $A.getCallback
+            (
+                function (response) {
+                    var state = response.getState();
+                    var result = response.getReturnValue();
+                    if (state === "SUCCESS") {
+                        component.set("v.lstSelectedInventors", result);
+                        var arryAPIValues = [];
+                        Array.isArray(component.get("v.lstSelectedInventors"))
+                        for ( var i = 0; i < component.get("v.lstSelectedInventors").length; i++) {
+                            arryAPIValues.push(component.get("v.lstSelectedInventors")[i].name);
+                            component.set("v.arrSelectedInventorIds", arryAPIValues);
+                            component.set("v.strSelectedInventorIds", arryAPIValues.join(","));
+                        } 
+                    } else if (state === "ERROR") {
+                        var errors = response.getError();
+                        console.error(errors);
+                    }
+                }
+            )
+        );
+        $A.enqueueAction(action);
+    },
+    
+    CreateInventor : function(component, InventorID,recordId) {
+        var action = component.get('c.CreateInventors');
+        action.setParams({ inventorId : InventorID, recordId : recordId });
+        action.setCallback
+        (
+            this,
+            $A.getCallback
+            (
+                function (response) 
+                {
+                    var state = response.getState();
+                    var result = response.getReturnValue();
+                    if (state === "SUCCESS")  {
+                        component.set("v.lstSelectedInventors", result);
+                        
+                    } 
+                    else if (state === "ERROR") 
+                    {
+                        var errors = response.getError();
+                        console.error(errors);
+                    }
+                }
+            )
+        );
+        $A.enqueueAction(action);
+    },  
+    
+    RemovedKeyWord : function(component, InventorID,recordId) {
+        var action = component.get('c.RemovedKeyWords');
+        action.setParams({ inventorId : InventorID, recordId : recordId  });
+        action.setCallback
+        (
+            this,
+            $A.getCallback
+            (
+                function (response) 
+                {
+                    var state = response.getState();
+                    var result = response.getReturnValue();
+                    if (state === "SUCCESS")  {
+                        component.set("v.lstSelectedInventors", result);
+                        //alert(state);
+                    } 
+                    else if (state === "ERROR") 
+                    {
+                        var errors = response.getError();
+                        console.error(errors);
+                    }
+                }
+            )
+        );
+        $A.enqueueAction(action);
+    },
