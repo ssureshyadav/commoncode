@@ -1,0 +1,70 @@
+var respMsg=response.getReturnValue();
+                var objectRecords = respMsg.lstRecords;
+                var fields = respMsg.mapFields;
+                
+                if (!objectRecords.length >0){
+                    component.set("v.progress",100);
+                    window.setTimeout(function(){ 
+                        component.set("v.displaybar",false);
+                    }, 100);
+                    return;
+                } 
+                
+                var csvStringResult, counter, keys, columnDivider, lineDivider;
+                columnDivider = ',';
+                lineDivider =  '\n';
+                var fieldLabels=[];
+                for(var key in fields){
+                    fieldLabels.push(fields[key]);
+                }
+                console.log(fieldLabels);
+                
+                csvStringResult = '';
+                csvStringResult += '"'+ fieldLabels.join('"'+columnDivider+'"') + '"';
+                csvStringResult += lineDivider;
+                
+                for(var i=0; i < objectRecords.length; i++) {   
+                    counter = 0;
+                    console.log(objectRecords[i]);
+                    for(var key in fields){
+                        if(counter > 0){ 
+                            csvStringResult += columnDivider; 
+                        }   
+                        console.log(key);
+                        if(key.includes('.')){
+                            console.log(key);
+                            var fieldsSplit=key.split('.');
+                            //console.log(fieldsSplit);
+                            if(fieldsSplit.length == 2){
+                            csvStringResult += '"'+ (objectRecords[i][fieldsSplit[0]][fieldsSplit[1]] != undefined ?objectRecords[i][fieldsSplit[0]][fieldsSplit[1]]:'') +'"';
+                            }else if(fieldsSplit.length == 3){
+                            csvStringResult += '"'+ (objectRecords[i][fieldsSplit[0]][fieldsSplit[1]] != undefined ?objectRecords[i][fieldsSplit[0]][fieldsSplit[1]][fieldsSplit[2]]:'') +'"';
+                            }
+                        }else{
+                            if(objectRecords[i][key] != undefined){
+                                csvStringResult +=  '"' + objectRecords[i][key] + '"';
+                            }else{
+                                csvStringResult += '"'+ '' +'"';
+                            }
+                           
+                        }
+                        counter++;
+                        
+                    } 
+                    csvStringResult += lineDivider;
+                }
+                
+                window.setTimeout(function() { 
+                    csvStringResult = csvStringResult.replaceAll("#", "Number");  
+                    var hiddenElement = document.createElement('a');
+                    hiddenElement.href = 'data:text/csv;utf-8,' + encodeURI(csvStringResult);
+                    hiddenElement.target = '_self'; // 
+                    hiddenElement.download = component.get("v.DownLoadFileName") + '.csv';  // CSV file Name* you can change it.[only name not .csv] 
+                    document.body.appendChild(hiddenElement); // Required for FireFox browser
+                    component.set("v.progress",100);
+                                  
+                    hiddenElement.click(); 
+                    window.setTimeout(function(){ 
+                        component.set("v.displaybar",false);
+                    }, 2000);
+                }, 1000);
