@@ -1,0 +1,4 @@
+var recid =  component.get("v.docId");
+        $A.get('e.lightning:openFiles').fire({
+		    recordIds: [recid]
+		});
