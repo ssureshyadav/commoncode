@@ -1,0 +1,7 @@
+To implement table with fixed header along with both x axis and y axis scroll: Use Below Style  
+
+.THIS .tableFixHead { overflow: auto; height: 550px; } 
+.THIS .tableFixHead table { border-collapse: inherit; width: 100%; } 
+.THIS .tableFixHead th { position: sticky; top: 0; background: white; z-index: 2; }
+
+AND wrap you table with a Div using tableFixHead class
