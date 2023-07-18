@@ -1,0 +1,56 @@
+/services/data/v56.0/tooling/query?q=Select+Id,DeveloperName+from+CustomField+order+by+LastModifiedDate+desc+limit+100
+
+return new Promise(
+            $A.getCallback((resolve, reject) => {
+                const action = component.get("c.GetAssignedDisclosure");
+                action.setParams({ recordId : component.get("v.recordId") });
+                action.setCallback(this, response => {
+                    component.set("v.isLoading", false);
+                    const state = response.getState();
+                    if (state === "SUCCESS") {
+                        return resolve(response.getReturnValue());
+                    } else if (state === "ERROR") {
+                        return reject(response.getError());
+                    }
+                    return null;
+                });
+                $A.enqueueAction(action);
+            })
+        );
+		
+helper.setRecordId(component);
+
+setRecordId : function (component) {
+    	var action = component.get("c.getRecordInfo");
+        action.setParams({ 'recordId' : component.get("v.recordId") });
+        action.setCallback(this, function(response) {
+            var state = response.getState();
+            if (state === "SUCCESS") {
+                var recordInfo = response.getReturnValue();
+                 component.set('v.recordId',recordInfo);  
+            }else{
+                let errors = response.getError();
+                let message = 'Unknown error'; // Default error message
+                if (errors && Array.isArray(errors) && errors.length > 0) {
+                    message = errors[0].message;
+                }
+                console.error(message);
+            }
+         });
+         $A.enqueueAction(action);
+	},
+	
+	@AuraEnabled
+    public static Id getRecordInfo(Id recordId) {
+        System.debug(recordId);
+        if(Schema.Standard__c.SObjectType == recordId.getSObjectType()){
+            Standard_Request__c request=[Select Id from Standard_Request__c Where SDO__c =: recordId];
+            recordId = request.Id;
+        }
+        return recordId;
+    }
+	
+if(Schema.Standard__c.SObjectType == PatentId.getSObjectType()){
+            Standard_Request__c request=[Select Id from Standard_Request__c Where SDO__c =: PatentId];
+            PatentId = request.Id;
+        }
