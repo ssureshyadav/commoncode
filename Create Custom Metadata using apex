@@ -1,0 +1,19 @@
+List<Boat_Delete__mdt> lstboat=new List<Boat_Delete__mdt>();
+Metadata.DeployContainer mdContainer = new Metadata.DeployContainer();
+String nameSpacePrefix =''; // if the metadata belongs to any package than include the namespace.                
+//Creating Record 
+
+for(Integer i=0;i<200;i++){
+
+
+Metadata.CustomMetadata metadataInstance =  new Metadata.CustomMetadata();
+metadataInstance.fullName = nameSpacePrefix + 'Boat_Delete__mdt.' + 'Boat'+i;
+metadataInstance.label = 'Boat'+i;       
+mdContainer.addMetadata(metadataInstance);  //adding record container that will be used to deploy the records in custom metadata.                        
+
+}
+
+// Enqueue custom metadata deployment
+// jobId is the deployment ID
+Id jobId = Metadata.Operations.enqueueDeployment(mdContainer, null);
+system.debug('jobId***'+jobId);
