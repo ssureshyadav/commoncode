@@ -1,0 +1,60 @@
+//import * as dotenv from 'dotenv';
+import PubSubApiClient from 'salesforce-pubsub-api-client';
+
+async function run() {
+    try {
+        // Load config from .env file
+        //dotenv.config();
+
+        // Build and connect Pub/Sub API client
+        const client = new PubSubApiClient({
+            authType: 'username-password',
+            loginUrl: 'https://companyname--fci.sandbox.my.salesforce.com/',
+            username: 'username',
+            password: 'password',
+            userToken: 'securitytoken'
+        });
+        await client.connect();
+
+        // Prepare event callback
+        const subscribeCallback = (subscription, callbackType, data) => {
+            if (callbackType === 'event') {
+                // Event received
+                console.log(
+                    `${subscription.topicName} - ``Handling ${event.payload.ChangeEventHeader.entityName} change event ` +
+                        `with ID ${event.replayId} ` +
+                        `(${subscription.receivedEventCount}/${subscription.requestedEventCount} ` +
+                        `events received so far)`
+                );
+                // Safely log event payload as a JSON string
+                console.log(
+                    JSON.stringify(
+                        event,
+                        (key, value) =>
+                            /* Convert BigInt values into strings and keep other types unchanged */
+                            typeof value === 'bigint'
+                                ? value.toString()
+                                : value,
+                        2
+                    )
+                );
+            } else if (callbackType === 'lastEvent') {
+                // Last event received
+                console.log(
+                    `${subscription.topicName} - Reached last of ${subscription.requestedEventCount} requested event on channel. Closing connection.`
+                );
+            } else if (callbackType === 'end') {
+                // Client closed the connection
+                console.log('Client shut down gracefully.');
+            }
+        };
+
+        // Subscribe to 100 account change event
+        //client.subscribe('/event/AccountChangeEvent', subscribeCallback, 100); // This is for change data capture
+		    client.subscribe('/event/Log__e', subscribeCallback, 100); // This is for platform event
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+run();
